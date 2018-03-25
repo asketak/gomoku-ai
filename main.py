@@ -1,6 +1,6 @@
 import random
 import pipe as pp
-from ai1 import ai as myai
+from aiweight import ai as myai
 from pipe import DEBUG_EVAL, DEBUG
 
 pp.infotext = 'name="pbrain-sima", author="Tomas Sima", version="1.0", country="Czech Republic", www="https://github.com/stranskyjan/pbrain-pyrandom"'
@@ -15,11 +15,12 @@ def brain_init():
     if pp.width < 5 or pp.height < 5:
         pp.pipeOut("ERROR size of the board")
         return
-    ai.init(pp.width, pp.height)
+    ai.init(pp.width)
+    board = [[0 for i in xrange(MAX_BOARD)] for j in xrange(MAX_BOARD)]
     pp.pipeOut("OK")
 
 def brain_restart():
-    ai.init(pp.width, pp.height)
+    ai.init(pp.width)
     pp.pipeOut("OK")
 
 def brain_my(x, y):
