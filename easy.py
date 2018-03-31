@@ -205,29 +205,28 @@ class GomokuGame(TwoPlayersGame):
         pat_l = []
         boardrot = np.rot90(self.board)
 
-    for patt in type_table:
-        patt_str = type_table[patt]
-        
-        patt  = list(patt)
-        psize = len(patt)
-        patt  = np.asarray(patt, np.int8)
+        for patt in type_table:
+            patt_str = type_table[patt]
+            patt  = list(patt)
+            psize = len(patt)
+            patt  = np.asarray(patt, np.int8)
 
-        for x in xrange(0, self.width):
-            for y in xrange(0, self.width - psize + 1):
-                a = (self.board[x:x + 1, y:y + psize].flatten())
-                b = (self.board[y:y + psize, x:x + 1].flatten())
-                if self.samearray(a, patt):
-                    pat_l.append(patt_str) 
-                if self.samearray(b, patt):
-                    pat_l.append(patt_str) 
+            for x in xrange(0, self.width):
+                for y in xrange(0, self.width - psize + 1):
+                    a = (self.board[x:x + 1, y:y + psize].flatten())
+                    b = (self.board[y:y + psize, x:x + 1].flatten())
+                    if self.samearray(a, patt):
+                        pat_l.append(patt_str) 
+                    if self.samearray(b, patt):
+                        pat_l.append(patt_str) 
 
-        for x in xrange(-self.width, self.width):
-            for y in xrange(0, self.width - psize + 1):
-                if self.samearray(self.board.diagonal(x)[y:y+psize], patt):
-                    pat_l.append(patt_str) 
-                if self.samearray(boardrot.diagonal(x)[y:y+psize], patt):
-                    pat_l.append(patt_str) 
-
+            for x in xrange(-self.width, self.width):
+                for y in xrange(0, self.width - psize + 1):
+                    if self.samearray(self.board.diagonal(x)[y:y+psize], patt):
+                        pat_l.append(patt_str) 
+                    if self.samearray(boardrot.diagonal(x)[y:y+psize], patt):
+                        pat_l.append(patt_str) 
+                        
         ret = score_table[self.projection(pat_l)]
 
         if self.nplayer == 1:
