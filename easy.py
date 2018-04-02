@@ -87,7 +87,9 @@ score_table = {
                 'l_3c':   1000,
                 'l_3':     100,
                 'l_2c':     10,
-                'l_2':       1
+                'l_2':       1,
+
+                'z':         0
              }
 
 
@@ -98,7 +100,7 @@ class GomokuGame(TwoPlayersGame):
         self.players = players
         self.width = width
         self.board = np.zeros((width, width), np.int8)
-        # self.board[width/2][width/2] = 1
+        self.board[width/2][width/2] = 2
         # self.board[width/2][width/2+1] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
@@ -112,11 +114,16 @@ class GomokuGame(TwoPlayersGame):
 
     def possible_moves(self):
         ret = []
+        rng = 1
         for x in xrange(0, self.width):
-            for y in xrange(0, self.width):
-                if self.board[x][y] == FREE:
-                    ret.append([x, y])
+            for y in xrange(0, self.width): # for all cells in grid
+                if self.board[x][y] == FREE: # if the cell is free
+                    for xx in xrange(max(0,x-rng),min(x+rng+1,self.width)):
+                        for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)):
+                            if self.board[xx][yy] != 0: # check neighbours 
+                                ret.append([x, y])
         return ret
+
 
     def make_move(self, move):
         self.board[move[0], move[1]] = self.nplayer
@@ -133,7 +140,12 @@ class GomokuGame(TwoPlayersGame):
         return self.checkwin(self.nopponent)
 
     def winner(self):
-        return "KONEC HRY"
+        if self.checkwin(2):
+            return "Vyhrava AI"
+        if self.checkwin(1):
+            return "Vyhravas ty"
+        return "buhvi"
+
 
     def checkwin(self, pl):
         me = pl
@@ -187,10 +199,10 @@ class GomokuGame(TwoPlayersGame):
                 b = tuple(self.board[y:y + psize, x:x + 1].flatten())
 
                 if a in type_table:
-                    # pat_l.append(type_table[a]) 
+                    pat_l.append(type_table[a]) 
                     ret += score_table[type_table[a]]
                 if b in type_table:
-                    # pat_l.append(type_table[b]) 
+                    pat_l.append(type_table[b]) 
                     ret += score_table[type_table[b]]
 
         for x in xrange(-self.width, self.width):
@@ -199,10 +211,10 @@ class GomokuGame(TwoPlayersGame):
                 b = tuple(boardrot.diagonal(x)[y:y+psize])
                 if a in type_table:
                     ret += score_table[type_table[a]]
-                    # pat_l.append(type_table[a]) 
+                    pat_l.append(type_table[a]) 
                 if b in type_table:
                     ret += score_table[type_table[b]]
-                    # pat_l.append(type_table[b]) 
+                    pat_l.append(type_table[b]) 
 
         # ret = score_table[self.projection(pat_l)]
         # print(str(ret))
@@ -220,23 +232,12 @@ class GomokuGame(TwoPlayersGame):
             return 'l_5'
         elif type_list.count('l_4') >= 1:
             return 'l_4'
-        elif type_list.count('l_3') >= 2:
-            return 'dl_3'
-        elif type_list.count('b_4') >= 1:
-            return 'b_4'
         elif type_list.count('l_3') >= 1:
             return 'l_3'
-        elif type_list.count('b_3') >= 2:
-            return 'db_3'
-        elif type_list.count('b_3') >= 1:
-            return 'b_3'
-        elif type_list.count('l_2') >= 2:
-            return 'dl_2'
         elif type_list.count('l_2') >= 1:
             return 'l_2'
         else:
             return 'z'
-
 
 
 # tt = TT()

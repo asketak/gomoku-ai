@@ -15,9 +15,9 @@ TEXT = '''
     <h2>{{msg}}</h2>
     <form action="" method="POST">
       <table>
-        {% for j in range(0, 5 ) %}
+        {% for j in range(0, ttt.width ) %}
         <tr>
-          {% for i in range(0, 5) %}
+          {% for i in range(0, ttt.width) %}
           <td>
             <button type="submit" name="choice" value="{{j}} {{i}}"
              {{"disabled" if ttt.spot_string(i, j)!="_"}}>
@@ -35,12 +35,13 @@ TEXT = '''
 '''
 
 app = Flask(__name__)
-ai_algo = Negamax(3)
+ai_algo = Negamax(3, win_score = 70000)
+width = 10
 
 
 @app.route("/", methods=['GET', 'POST'])
 def play_game():
-    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],5)
+    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
     game_cookie = request.cookies.get('game_board')
     reset = False
     if game_cookie:
@@ -54,7 +55,7 @@ def play_game():
             ai_move = ttt.get_move()
             ttt.play_move(ai_move)
     if "reset" in request.form:
-        ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],5)
+        ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
         reset = True
 
     if ttt.is_over():
