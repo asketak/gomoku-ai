@@ -94,7 +94,6 @@ score_table = {
                 'z':         0
              }
 
-
 class GomokuGame(TwoPlayersGame):
     """ Gomoku game for minimax """
 
@@ -105,9 +104,13 @@ class GomokuGame(TwoPlayersGame):
         self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
+        self.score = 0  
+        self.oldPatt = []
+        self.DBG = False
 
     def htob(self):
         self.board = np.asarray(self.hboard)
+        self.score = self.scorefromscratch()
 
     def spot_string(self, i, j):
         return ["_", "O", "X"][self.board[j][i]]
@@ -121,17 +124,78 @@ class GomokuGame(TwoPlayersGame):
                     for xx in xrange(max(0,x-rng),min(x+rng+1,self.width)): # for all cells nearby
                         for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)): # for all cells nearby
                             if self.board[xx][yy] != 0: # check neighbours 
-                                ret.append([x, y])
+                                ret.append([[x], [y]])
         return ret
 
+    def scoring(self):
+        return self.score
 
     def make_move(self, move):
-        self.board[move[0], move[1]] = self.nplayer
+        self.df = False
+        self.score = -1 * self.score
+        scorediff = self.computescore(move[0][0],(move[1][0]))
+        self.board[move[0][0], move[1][0]] = self.nplayer
+        self.df = True
+        scorediff2 = self.computescore(int(move[0][0]),int(move[1][0]))
         self.hboard = tuple(map(tuple, self.board))
+        pprint(self.score)
+        self.score += scorediff2-scorediff 
+        pprint(scorediff)
+        pprint(scorediff2)
+        x = self.scorefromscratch()
+        pprint(x)
+        if self.score != x :
+            self.DBG = True
+            self.computescore(int(move[0][0]),int(move[1][0]))
+            x = self.scorefromscratch()
+            pass
 
-    def unmake_move(self, move):
-        self.board[move[0], move[1]] = 0
-        self.hboard = tuple(map(tuple, self.board))
+
+        print("=========================")
+
+    def computescore(self,xmov,ymov): # spocitam hvezdici patternu 10*10 s novym uprostred a bez nej
+    # a pak odectu starou a prictu novou
+        board = self.board
+        oldPatt = self.oldPatt
+        newPatt = []
+        boardrot = np.rot90(self.board)
+        psize = 5
+        ret = 0
+
+        for offset in xrange(-psize+1, 1):
+            a = tuple(self.board[xmov:xmov + 1, ymov+offset:offset + ymov + psize].flatten())
+            b = tuple(boardrot[-ymov-1 , xmov+offset:offset + xmov + psize].flatten())
+            c = self.board.diagonal(-xmov+ymov)
+            pos = (-xmov+ymov)
+            clan = len(c)
+            if pos>=0:
+                c = tuple(c[xmov+offset:xmov+offset+psize].flatten())
+            else:
+                c = tuple(c[xmov+offset+pos:xmov+offset+pos+psize].flatten())
+            d = boardrot.diagonal(-self.width+1+ymov+xmov)
+            dlan = len(d)
+            anchor = min(xmov,self.width-ymov-1)
+            d = tuple(d[anchor+offset:anchor+offset+psize])
+
+            if a in type_table:
+                newPatt.append(type_table[a]) 
+                ret += score_table[type_table[a]]
+            if b in type_table:
+                newPatt.append(type_table[b]) 
+                ret += score_table[type_table[b]]
+            if c in type_table:
+                ret += score_table[type_table[c]]
+                newPatt.append(type_table[c]) 
+            if d in type_table:
+                ret += score_table[type_table[d]]
+                newPatt.append(type_table[d]) 
+            if self.DBG:
+                import pdb; pdb.set_trace()  # breakpoint 711eb3e4x //
+
+        if self.nplayer == 1:
+            return ret
+        else:
+            return -ret
 
     def win(self):
         return self.checkwin(self.nplayer)
@@ -186,7 +250,9 @@ class GomokuGame(TwoPlayersGame):
     def ttentry(self):
         return "".join([".0X"[i] for i in self.board.flatten()])
 
-    def scoring(self):
+
+
+    def scorefromscratch(self):
 
         pat_l = []
         boardrot = np.rot90(self.board)
@@ -199,9 +265,13 @@ class GomokuGame(TwoPlayersGame):
                 b = tuple(self.board[y:y + psize, x:x + 1].flatten())
 
                 if a in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
                     pat_l.append(type_table[a]) 
                     ret += score_table[type_table[a]]
                 if b in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
                     pat_l.append(type_table[b]) 
                     ret += score_table[type_table[b]]
 
@@ -210,15 +280,15 @@ class GomokuGame(TwoPlayersGame):
                 a = tuple(self.board.diagonal(x)[y:y+psize])
                 b = tuple(boardrot.diagonal(x)[y:y+psize])
                 if a in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
                     ret += score_table[type_table[a]]
                     pat_l.append(type_table[a]) 
                 if b in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
                     ret += score_table[type_table[b]]
                     pat_l.append(type_table[b]) 
-
-
-            
-
         if self.nplayer == 1:
             return ret
         else:

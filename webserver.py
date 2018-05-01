@@ -1,7 +1,7 @@
 from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from pprint import pprint
 from flask import Flask, render_template_string, request, make_response
-from easy import GomokuGame
+from ai_negamax_faster import GomokuGame
 import codecs
 import pickle
 
@@ -19,9 +19,9 @@ TEXT = '''
         <tr>
           {% for i in range(0, ttt.width) %}
           <td>
-            <button type="submit" name="choice" value="{{j}} {{i}}"
-             {{"disabled" if ttt.spot_string(i, j)!="_"}}>
-              {{ttt.spot_string(i, j)}}
+            <button type="submit" name="choice" value="{{i}} {{j}}"
+             {{"disabled" if ttt.spot_string(j, i)!="_"}}>
+              {{ttt.spot_string(j, i)}}
             </button>
           </td>
           {% endfor %}
@@ -51,6 +51,7 @@ def play_game():
     if "choice" in request.form:
         coord = [ map(int, x) for x in request.form["choice"].split()]
         ttt.play_move(coord)
+        pprint(coord)
         if not ttt.is_over():
             ai_move = ttt.get_move()
             ttt.play_move(ai_move)
