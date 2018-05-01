@@ -50,18 +50,6 @@ def brain_turn():
     x,y = ai.turn();
     pp.do_mymove(x, y)
 
-    # i = 0
-    # while True:
-    #     x = random.randint(0, pp.width)
-    #     y = random.randint(0, pp.height)
-    #     i += 1
-    #     if pp.terminateAI:
-    #         return
-    #     if isFree(x,y):
-    #         break
-    # if i > 1:
-    #     pp.pipeOut("DEBUG {} coordinates didn't hit an empty field".format(i))
-
 def brain_end():
     pass
 
@@ -71,7 +59,6 @@ def brain_about():
 if DEBUG_EVAL:
     import win32gui
     def brain_eval(x, y):
-        # TODO check if it works as expected
         wnd = win32gui.GetForegroundWindow()
         dc = win32gui.GetDC(wnd)
         rc = win32gui.GetClientRect(wnd)
@@ -79,7 +66,6 @@ if DEBUG_EVAL:
         win32gui.ExtTextOut(dc, rc[2]-15, 3, 0, None, c, ())
         win32gui.ReleaseDC(wnd, dc)
 
-# "overwrites" functions in pisqpipe module
 pp.brain_init = brain_init
 pp.brain_restart = brain_restart
 pp.brain_my = brain_my

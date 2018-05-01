@@ -9,9 +9,9 @@ import pickle
 TEXT = '''
 <!doctype html>
 <html>
-  <head><title>Tic Tac Toe</title></head>
+  <head><title>Gomoku game</title></head>
   <body>
-    <h1>Tic Tac Toe</h1>
+    <h1>Gomoku game</h1>
     <h2>{{msg}}</h2>
     <form action="" method="POST">
       <table>
