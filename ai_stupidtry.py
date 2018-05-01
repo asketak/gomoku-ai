@@ -8,6 +8,7 @@ import pipe as pp
 import numpy as np
 from decimal import *
 
+# this was not succesful at all
 
 class ai():
     def __init__(self):  # empty init, not insert anything

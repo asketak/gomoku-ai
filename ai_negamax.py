@@ -28,6 +28,7 @@ type_table = {
                 (1,0,1,0,1): 'l_3',
                 (1,0,1,1,0): 'l_3',
                 (1,1,0,0,1): 'l_3',
+                (1,1,0,1,0): 'l_3',
                 (1,1,1,0,0): 'l_3c',
 
                 (1,1,0,0,0): 'l_2c',
@@ -58,6 +59,7 @@ type_table = {
                 (2,0,2,0,2): 'b_3',
                 (2,0,2,2,0): 'b_3',
                 (2,2,0,0,2): 'b_3',
+                (2,2,0,2,0): 'b_3',
                 (2,2,2,0,0): 'b_3c',
 
                 (2,2,0,0,0): 'b_2c',
@@ -101,13 +103,11 @@ class GomokuGame(TwoPlayersGame):
         self.width = width
         self.board = np.zeros((width, width), np.int8)
         self.board[width/2][width/2] = 2
-        # self.board[width/2][width/2+1] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
 
     def htob(self):
         self.board = np.asarray(self.hboard)
-
 
     def spot_string(self, i, j):
         return ["_", "O", "X"][self.board[j][i]]
@@ -118,8 +118,8 @@ class GomokuGame(TwoPlayersGame):
         for x in xrange(0, self.width):
             for y in xrange(0, self.width): # for all cells in grid
                 if self.board[x][y] == FREE: # if the cell is free
-                    for xx in xrange(max(0,x-rng),min(x+rng+1,self.width)):
-                        for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)):
+                    for xx in xrange(max(0,x-rng),min(x+rng+1,self.width)): # for all cells nearby
+                        for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)): # for all cells nearby
                             if self.board[xx][yy] != 0: # check neighbours 
                                 ret.append([x, y])
         return ret
