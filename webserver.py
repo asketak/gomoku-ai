@@ -1,10 +1,11 @@
 from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from pprint import pprint
 from flask import Flask, render_template_string, request, make_response
-from ai_negamax_faster import GomokuGame
+from ai_negamax import GomokuGame
 import codecs
 import pickle
-
+from easyAI import TT
+import numpy as np
 
 TEXT = '''
 <!doctype html>
@@ -35,13 +36,13 @@ TEXT = '''
 '''
 
 app = Flask(__name__)
-ai_algo = Negamax(3, win_score = 70000)
+ai_algo = Negamax(3, tt=TT())
 width = 10
 
 
 @app.route("/", methods=['GET', 'POST'])
 def play_game():
-    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
+    # ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
     game_cookie = request.cookies.get('game_board')
     reset = False
     if game_cookie:
@@ -56,7 +57,8 @@ def play_game():
             ai_move = ttt.get_move()
             ttt.play_move(ai_move)
     if "reset" in request.form:
-        ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
+        ttt.hboard = tuple(np.zeros((width, width), np.int8))
+        ttt.htob()
         reset = True
 
     if ttt.is_over():
@@ -72,4 +74,6 @@ def play_game():
 
 
 if __name__ == "__main__":
+    global ttt 
+    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
     app.run()

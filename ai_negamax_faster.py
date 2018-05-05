@@ -104,6 +104,7 @@ class GomokuGame(TwoPlayersGame):
         self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
+        self.movecount = 1  # player 1 starts
         self.score = 0  
         self.oldPatt = []
         self.DBG = False
@@ -132,26 +133,18 @@ class GomokuGame(TwoPlayersGame):
 
     def make_move(self, move):
         self.df = False
+        self.movecount += 1
         self.score = -1 * self.score
         scorediff = self.computescore(move[0][0],(move[1][0]))
         self.board[move[0][0], move[1][0]] = self.nplayer
         self.df = True
         scorediff2 = self.computescore(int(move[0][0]),int(move[1][0]))
         self.hboard = tuple(map(tuple, self.board))
-        pprint(self.score)
+        # if self.movecount%2 == 0:
+        #     self.score = self.scorefromscratch()
+        # else:
         self.score += scorediff2-scorediff 
-        pprint(scorediff)
-        pprint(scorediff2)
-        x = self.scorefromscratch()
-        pprint(x)
-        if self.score != x :
-            self.DBG = True
-            self.computescore(int(move[0][0]),int(move[1][0]))
-            x = self.scorefromscratch()
-            pass
 
-
-        print("=========================")
 
     def computescore(self,xmov,ymov): # spocitam hvezdici patternu 10*10 s novym uprostred a bez nej
     # a pak odectu starou a prictu novou

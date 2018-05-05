@@ -9,90 +9,11 @@ from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from easyAI import id_solve, TT
 import numpy as np
 from easyAI import SSS
+from numba import jit
+from score import score
 
 FREE = 0
-type_table = {
-                (1,1,1,1,1): 'l_5',
 
-                (1,1,1,1,0): 'l_4c',
-                (1,1,1,0,1): 'l_4',
-                (1,1,0,1,1): 'l_4',
-                (1,0,1,1,1): 'l_4',
-                (0,1,1,1,1): 'l_4c',
-
-                (0,0,1,1,1): 'l_3c',
-                (0,1,0,1,1): 'l_3',
-                (0,1,1,0,1): 'l_3',
-                (0,1,1,1,0): 'l_3c',
-                (1,0,0,1,1): 'l_3',
-                (1,0,1,0,1): 'l_3',
-                (1,0,1,1,0): 'l_3',
-                (1,1,0,0,1): 'l_3',
-                (1,1,0,1,0): 'l_3',
-                (1,1,1,0,0): 'l_3c',
-
-                (1,1,0,0,0): 'l_2c',
-                (1,0,1,0,0): 'l_2',
-                (1,0,0,1,0): 'l_2',
-                (1,0,0,0,1): 'l_2',
-                (0,1,1,0,0): 'l_2c',
-                (0,1,0,1,0): 'l_2',
-                (0,1,0,0,1): 'l_2',
-                (0,0,1,1,0): 'l_2c',
-                (0,0,1,0,1): 'l_2',
-                (0,0,0,1,1): 'l_2c',
-
-# ENEMY
-                (2,2,2,2,2): 'b_5',
-
-                (2,2,2,2,0): 'b_4c',
-                (2,2,2,0,2): 'b_4',
-                (2,2,0,2,2): 'b_4',
-                (2,0,2,2,2): 'b_4',
-                (0,2,2,2,2): 'b_4c',
-
-                (0,0,2,2,2): 'b_3c',
-                (0,2,0,2,2): 'b_3',
-                (0,2,2,0,2): 'b_3',
-                (0,2,2,2,0): 'b_3c',
-                (2,0,0,2,2): 'b_3',
-                (2,0,2,0,2): 'b_3',
-                (2,0,2,2,0): 'b_3',
-                (2,2,0,0,2): 'b_3',
-                (2,2,0,2,0): 'b_3',
-                (2,2,2,0,0): 'b_3c',
-
-                (2,2,0,0,0): 'b_2c',
-                (2,0,2,0,0): 'b_2',
-                (2,0,0,2,0): 'b_2',
-                (2,0,0,0,2): 'b_2',
-                (0,2,2,0,0): 'b_2c',
-                (0,2,0,2,0): 'b_2',
-                (0,2,0,0,2): 'b_2',
-                (0,0,2,2,0): 'b_2c',
-                (0,0,2,0,2): 'b_2',
-                (0,0,0,2,2): 'b_2c'
-             }
-
-score_table = {
-                'b_5':-1000000,
-                'b_4c':-100000,
-                'b_4':  -10000,
-                'b_3c':  -1000,
-                'b_3':    -100,
-                'b_2c':    -10,
-                'b_2':      -1,
-
-                'l_5': 1000000,
-                'l_4c': 100000,
-                'l_4':   10000,
-                'l_3c':   1000,
-                'l_3':     100,
-                'l_2c':     10,
-                'l_2':       1,
-
-                'z':         0
-             }
 
 
 class GomokuGame(TwoPlayersGame):
@@ -102,7 +23,7 @@ class GomokuGame(TwoPlayersGame):
         self.players = players
         self.width = width
         self.board = np.zeros((width, width), np.int8)
-        self.board[width/2][width/2] = 2
+        # self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
 
@@ -122,6 +43,8 @@ class GomokuGame(TwoPlayersGame):
                         for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)): # for all cells nearby
                             if self.board[xx][yy] != 0: # check neighbours 
                                 ret.append([x, y])
+        if ret == []:
+            ret.append([width/2,width/2])
         return ret
 
 
@@ -145,6 +68,9 @@ class GomokuGame(TwoPlayersGame):
         if self.checkwin(1):
             return "Vyhravas ty"
         return "buhvi"
+
+    def ttentry(self):
+        return self.hboard;
 
 
     def checkwin(self, pl):
@@ -187,39 +113,5 @@ class GomokuGame(TwoPlayersGame):
         return "".join([".0X"[i] for i in self.board.flatten()])
 
     def scoring(self):
+        return score(self.board,self.width,self.nplayer)
 
-        pat_l = []
-        boardrot = np.rot90(self.board)
-        psize = 5
-        ret = 0
-
-        for x in xrange(0, self.width):
-            for y in xrange(0, self.width - psize + 1):
-                a = tuple(self.board[x:x + 1, y:y + psize].flatten())
-                b = tuple(self.board[y:y + psize, x:x + 1].flatten())
-
-                if a in type_table:
-                    pat_l.append(type_table[a]) 
-                    ret += score_table[type_table[a]]
-                if b in type_table:
-                    pat_l.append(type_table[b]) 
-                    ret += score_table[type_table[b]]
-
-        for x in xrange(-self.width, self.width):
-            for y in xrange(0, self.width - psize + 1):
-                a = tuple(self.board.diagonal(x)[y:y+psize])
-                b = tuple(boardrot.diagonal(x)[y:y+psize])
-                if a in type_table:
-                    ret += score_table[type_table[a]]
-                    pat_l.append(type_table[a]) 
-                if b in type_table:
-                    ret += score_table[type_table[b]]
-                    pat_l.append(type_table[b]) 
-
-
-            
-
-        if self.nplayer == 1:
-            return ret
-        else:
-            return -ret
