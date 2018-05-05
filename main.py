@@ -1,6 +1,6 @@
 import random
 import pipe as pp
-from aiweight import ai as myai
+from negamax_piskvork import ai as myai
 from pipe import DEBUG_EVAL, DEBUG
 
 pp.infotext = 'name="pbrain-sima", author="Tomas Sima", version="1.0", country="Czech Republic", www="https://github.com/stranskyjan/pbrain-pyrandom"'

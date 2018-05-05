@@ -169,7 +169,5 @@ def computescore(board,width,nplayer,xmov,ymov): # spocitam hvezdici patternu 10
             ret += score_table[type_table[dd]]
 
 
-    if nplayer == 1:
-        return ret
-    else:
-        return -ret
+    return ret
+

@@ -1,7 +1,7 @@
 from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from pprint import pprint
 from flask import Flask, render_template_string, request, make_response
-from ai_negamax_faster import GomokuGame
+from ai_negamax import GomokuGame
 import codecs
 import pickle
 from easyAI import TT
@@ -36,8 +36,8 @@ TEXT = '''
 '''
 
 app = Flask(__name__)
-ai_algo = Negamax(3, tt=TT() )
-width = 15
+ai_algo = Negamax(3 )
+width = 10
 
 def pack(arr):
   ret = {}

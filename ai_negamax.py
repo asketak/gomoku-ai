@@ -12,6 +12,7 @@ from easyAI import SSS
 from numba import jit
 from score import score
 
+
 FREE = 0
 
 
@@ -25,7 +26,7 @@ class GomokuGame(TwoPlayersGame):
         self.board = np.zeros((width, width), np.int8)
         # self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
-        self.nplayer = 1  # player 1 starts
+        self.nplayer = 2  # player 1 starts
 
     def htob(self):
         self.board = np.asarray(self.hboard)
@@ -44,7 +45,7 @@ class GomokuGame(TwoPlayersGame):
                             if self.board[xx][yy] != 0: # check neighbours 
                                 ret.append([x, y])
         if ret == []:
-            ret.append([width/2,width/2])
+            ret.append([self.width/2,self.width/2])
         return ret
 
 

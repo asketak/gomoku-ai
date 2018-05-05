@@ -50,28 +50,51 @@ class GomokuGame(TwoPlayersGame):
         return ret
 
     def scoring(self):
-        return self.score
+        sc = self.score
+        ss = self.scorefromscratch()
+        if sc != -ss:
+            import pdb; pdb.set_trace()  # breakpoint 69cb5e3d //       board = self.board
+
+        return -self.score
 
     def make_move(self, move):
+        nplayer = self.nplayer
+        oldscore = self.score
         self.df = False
         self.movecount += 1
         self.last = self.nplayer
-        if self.nplayer == 1:
-            self.score = -1 * self.score
         scorediff = computescore(self.board,self.width,self.nplayer,move[0],(move[1]))
         self.board[move[0], move[1]] = self.nplayer
         self.df = True
         scorediff2 = computescore(self.board,self.width,self.nplayer,int(move[0]),int(move[1]))
         self.hboard = tuple(map(tuple, self.board))
-        # if self.movecount%2 == 0:
-        #     self.score = self.scorefromscratch()
-        # else:
-        self.score += scorediff2-scorediff 
-        sc = self.score
-        ss = self.scorefromscratch()
         board = self.board
+        diff = scorediff2 - scorediff
+        if self.nplayer == 1:
+            self.score = -1 * self.score
+            self.score += diff ## musi byt plus
+        else:
+            self.score = -1 * self.score
+            self.score -= diff ## musi byt minus
 
 
+        # def unmake_move(self, move):
+        #     player = self.board[move[0],move[1]]
+        #     oldscore = self.score
+        #     # if self.nplayer == 1: ## MUSI platit i pro dvojku
+        #     self.score = -1 * self.score
+
+        #     scorediff = computescore(self.board,self.width,self.nplayer,move[0],(move[1]))
+        #     self.board[move[0], move[1]] = 0
+        #     scorediff2 = computescore(self.board,self.width,self.nplayer,int(move[0]),int(move[1]))
+        #     self.hboard = tuple(map(tuple, self.board))
+        #     self.score += scorediff -scorediff2
+        #     sc = self.score
+        #     ss = self.scorefromscratch()
+        #     if sc != ss:
+        #         import pdb; pdb.set_trace()  # breakpoint 69cb5e3d //
+
+        #     board = self.board
 
 
 
