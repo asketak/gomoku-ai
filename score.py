@@ -10,6 +10,7 @@ from easyAI import id_solve, TT
 import numpy as np
 from easyAI import SSS
 from numba import jit
+import pdb 
 type_table = {
                 (1,1,1,1,1): 'l_5',
 
@@ -76,19 +77,19 @@ type_table = {
 score_table = {
                 'b_5':-1000000,
                 'b_4c':-100000,
-                'b_4':  -20000,
+                'b_4':  -10000,
                 'b_3c':  -1000,
-                'b_3':    -200,
+                'b_3':    -100,
                 'b_2c':    -10,
-                'b_2':      -2,
+                'b_2':      -1,
 
                 'l_5': 1000000,
                 'l_4c': 100000,
-                'l_4':   20000,
+                'l_4':   10000,
                 'l_3c':   1000,
-                'l_3':     200,
+                'l_3':     100,
                 'l_2c':     10,
-                'l_2':       2,
+                'l_2':       1,
 
                 'z':         0
              }
@@ -122,6 +123,52 @@ def score(board,witdh,nplayer):
             if b in type_table:
                 ret += score_table[type_table[b]]
                 pat_l.append(type_table[b]) 
+    if nplayer == 1:
+        return ret
+    else:
+        return -ret
+@jit
+def computescore(board,width,nplayer,xmov,ymov): # spocitam hvezdici patternu 10*10 s novym uprostred a bez nej
+# a pak odectu starou a prictu novou
+    board = board
+    newPatt = []
+    boardrot = np.rot90(board)
+    psize = 5
+    ret = 0
+
+
+    c = tuple(board.diagonal(-xmov+ymov))
+    d = tuple(boardrot.diagonal(-width+1+ymov+xmov))
+    a = tuple(board[xmov:xmov + 1].flatten())
+    b = tuple(boardrot[-ymov-1].flatten())
+    # if (board == x).all():
+    #    pdb.set_trace()  # breakpoint 7a891b19 //
+ 
+    for x in xrange(0,len(a)-psize+1):
+        aa = tuple(a[x:x+psize])
+        if aa in type_table:
+            newPatt.append(type_table[aa]) 
+            ret += score_table[type_table[aa]]
+
+    for x in xrange(0,len(b)-psize+1):
+        bb = tuple(b[x:x+psize])
+        if bb in type_table:
+            newPatt.append(type_table[bb]) 
+            ret += score_table[type_table[bb]]
+
+    for x in xrange(0,len(c)-psize+1):
+        cc = tuple(c[x:x+psize])
+        if cc in type_table:
+            newPatt.append(type_table[cc]) 
+            ret += score_table[type_table[cc]]
+
+    for x in xrange(0,len(d)-psize+1):
+        dd = tuple(d[x:x+psize])
+        if dd in type_table:
+            newPatt.append(type_table[dd]) 
+            ret += score_table[type_table[dd]]
+
+
     if nplayer == 1:
         return ret
     else:

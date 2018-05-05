@@ -9,90 +9,9 @@ from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from easyAI import id_solve, TT
 import numpy as np
 from easyAI import SSS
+from score import computescore,type_table,score_table
 
 FREE = 0
-type_table = {
-                (1,1,1,1,1): 'l_5',
-
-                (1,1,1,1,0): 'l_4c',
-                (1,1,1,0,1): 'l_4',
-                (1,1,0,1,1): 'l_4',
-                (1,0,1,1,1): 'l_4',
-                (0,1,1,1,1): 'l_4c',
-
-                (0,0,1,1,1): 'l_3c',
-                (0,1,0,1,1): 'l_3',
-                (0,1,1,0,1): 'l_3',
-                (0,1,1,1,0): 'l_3c',
-                (1,0,0,1,1): 'l_3',
-                (1,0,1,0,1): 'l_3',
-                (1,0,1,1,0): 'l_3',
-                (1,1,0,0,1): 'l_3',
-                (1,1,0,1,0): 'l_3',
-                (1,1,1,0,0): 'l_3c',
-
-                (1,1,0,0,0): 'l_2c',
-                (1,0,1,0,0): 'l_2',
-                (1,0,0,1,0): 'l_2',
-                (1,0,0,0,1): 'l_2',
-                (0,1,1,0,0): 'l_2c',
-                (0,1,0,1,0): 'l_2',
-                (0,1,0,0,1): 'l_2',
-                (0,0,1,1,0): 'l_2c',
-                (0,0,1,0,1): 'l_2',
-                (0,0,0,1,1): 'l_2c',
-
-# ENEMY
-                (2,2,2,2,2): 'b_5',
-
-                (2,2,2,2,0): 'b_4c',
-                (2,2,2,0,2): 'b_4',
-                (2,2,0,2,2): 'b_4',
-                (2,0,2,2,2): 'b_4',
-                (0,2,2,2,2): 'b_4c',
-
-                (0,0,2,2,2): 'b_3c',
-                (0,2,0,2,2): 'b_3',
-                (0,2,2,0,2): 'b_3',
-                (0,2,2,2,0): 'b_3c',
-                (2,0,0,2,2): 'b_3',
-                (2,0,2,0,2): 'b_3',
-                (2,0,2,2,0): 'b_3',
-                (2,2,0,0,2): 'b_3',
-                (2,2,0,2,0): 'b_3',
-                (2,2,2,0,0): 'b_3c',
-
-                (2,2,0,0,0): 'b_2c',
-                (2,0,2,0,0): 'b_2',
-                (2,0,0,2,0): 'b_2',
-                (2,0,0,0,2): 'b_2',
-                (0,2,2,0,0): 'b_2c',
-                (0,2,0,2,0): 'b_2',
-                (0,2,0,0,2): 'b_2',
-                (0,0,2,2,0): 'b_2c',
-                (0,0,2,0,2): 'b_2',
-                (0,0,0,2,2): 'b_2c'
-             }
-
-score_table = {
-                'b_5':-1000000,
-                'b_4c':-100000,
-                'b_4':  -10000,
-                'b_3c':  -1000,
-                'b_3':    -100,
-                'b_2c':    -10,
-                'b_2':      -1,
-
-                'l_5': 1000000,
-                'l_4c': 100000,
-                'l_4':   10000,
-                'l_3c':   1000,
-                'l_3':     100,
-                'l_2c':     10,
-                'l_2':       1,
-
-                'z':         0
-             }
 
 class GomokuGame(TwoPlayersGame):
     """ Gomoku game for minimax """
@@ -101,7 +20,7 @@ class GomokuGame(TwoPlayersGame):
         self.players = players
         self.width = width
         self.board = np.zeros((width, width), np.int8)
-        self.board[width/2][width/2] = 2
+        # self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
         self.nplayer = 1  # player 1 starts
         self.movecount = 1  # player 1 starts
@@ -125,7 +44,9 @@ class GomokuGame(TwoPlayersGame):
                     for xx in xrange(max(0,x-rng),min(x+rng+1,self.width)): # for all cells nearby
                         for yy in xrange(max(0,y-rng),min(y+rng+1,self.width)): # for all cells nearby
                             if self.board[xx][yy] != 0: # check neighbours 
-                                ret.append([[x], [y]])
+                                ret.append([x, y])
+        if ret == []:
+            ret.append([width/2,width/2])
         return ret
 
     def scoring(self):
@@ -134,61 +55,25 @@ class GomokuGame(TwoPlayersGame):
     def make_move(self, move):
         self.df = False
         self.movecount += 1
-        self.score = -1 * self.score
-        scorediff = self.computescore(move[0][0],(move[1][0]))
-        self.board[move[0][0], move[1][0]] = self.nplayer
+        self.last = self.nplayer
+        if self.nplayer == 1:
+            self.score = -1 * self.score
+        scorediff = computescore(self.board,self.width,self.nplayer,move[0],(move[1]))
+        self.board[move[0], move[1]] = self.nplayer
         self.df = True
-        scorediff2 = self.computescore(int(move[0][0]),int(move[1][0]))
+        scorediff2 = computescore(self.board,self.width,self.nplayer,int(move[0]),int(move[1]))
         self.hboard = tuple(map(tuple, self.board))
         # if self.movecount%2 == 0:
         #     self.score = self.scorefromscratch()
         # else:
         self.score += scorediff2-scorediff 
-
-
-    def computescore(self,xmov,ymov): # spocitam hvezdici patternu 10*10 s novym uprostred a bez nej
-    # a pak odectu starou a prictu novou
+        sc = self.score
+        ss = self.scorefromscratch()
         board = self.board
-        oldPatt = self.oldPatt
-        newPatt = []
-        boardrot = np.rot90(self.board)
-        psize = 5
-        ret = 0
 
-        for offset in xrange(-psize+1, 1):
-            a = tuple(self.board[xmov:xmov + 1, ymov+offset:offset + ymov + psize].flatten())
-            b = tuple(boardrot[-ymov-1 , xmov+offset:offset + xmov + psize].flatten())
-            c = self.board.diagonal(-xmov+ymov)
-            pos = (-xmov+ymov)
-            clan = len(c)
-            if pos>=0:
-                c = tuple(c[xmov+offset:xmov+offset+psize].flatten())
-            else:
-                c = tuple(c[xmov+offset+pos:xmov+offset+pos+psize].flatten())
-            d = boardrot.diagonal(-self.width+1+ymov+xmov)
-            dlan = len(d)
-            anchor = min(xmov,self.width-ymov-1)
-            d = tuple(d[anchor+offset:anchor+offset+psize])
 
-            if a in type_table:
-                newPatt.append(type_table[a]) 
-                ret += score_table[type_table[a]]
-            if b in type_table:
-                newPatt.append(type_table[b]) 
-                ret += score_table[type_table[b]]
-            if c in type_table:
-                ret += score_table[type_table[c]]
-                newPatt.append(type_table[c]) 
-            if d in type_table:
-                ret += score_table[type_table[d]]
-                newPatt.append(type_table[d]) 
-            if self.DBG:
-                import pdb; pdb.set_trace()  # breakpoint 711eb3e4x //
 
-        if self.nplayer == 1:
-            return ret
-        else:
-            return -ret
+
 
     def win(self):
         return self.checkwin(self.nplayer)
