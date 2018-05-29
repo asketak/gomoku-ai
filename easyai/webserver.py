@@ -1,7 +1,7 @@
-from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
+from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax, DUAL
 from pprint import pprint
 from flask import Flask, render_template_string, request, make_response
-from ai_negamax import GomokuGame
+from ai_negamax_faster import GomokuGame
 import codecs
 import pickle
 from easyAI import TT
@@ -36,8 +36,9 @@ TEXT = '''
 '''
 
 app = Flask(__name__)
-ai_algo = Negamax(3 )
-width = 10
+# ai_algo = Negamax(2 )
+ai_algo = DUAL(2,  win_score= 1000000)
+width = 15
 
 def pack(arr):
   ret = {}
@@ -57,22 +58,14 @@ def unpack(dict):
 
 @app.route("/", methods=['GET', 'POST'])
 def play_game():
-    # ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
+    global ttt 
     game_cookie = request.cookies.get('game_board')
     reset = False
-    # if game_cookie:
-        # ttt.hboard = [int(x) for x in game_cookie.split(",")]
-
-        # ck = pickle.loads(game_cookie)
-        # ttt.hboard = unpack(ck)
-        # ttt.htob()
     if "choice" in request.form:
         req = (request.form["choice"].split(','))
-        pprint(req)
         coord = [ int(req[0]), int(req[1])]
         ttt.play_move(coord)
-        pprint(coord)
-        if not ttt.is_over():
+        if not ttt.is_over2():
             ai_move = ttt.get_move()
             ttt.play_move(ai_move)
     if "reset" in request.form:
@@ -80,21 +73,21 @@ def play_game():
         ttt.htob()
         reset = True
 
-    if ttt.is_over():
-        msg = ttt.winner()
-    else:
-        msg = "play move"
+    msg = ttt.winner()
     resp = make_response(render_template_string(TEXT, ttt=ttt, msg=msg))
     pickled = (pickle.dumps(pack(ttt.hboard)))
     resp.set_cookie("game_board", pickled)
     if reset:
+        ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width,1)
+        ttt.hboard = tuple(np.zeros((width, width), np.int8))
+        ttt.htob()
         resp.set_cookie('game_board', '', expires=0)
     return resp
 
 
 if __name__ == "__main__":
     global ttt 
-    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width)
+    ttt = GomokuGame([Human_Player(), AI_Player(ai_algo)],width,1)
     app.run()
 
 

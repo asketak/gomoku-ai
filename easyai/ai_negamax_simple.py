@@ -9,13 +9,9 @@ from easyAI import TwoPlayersGame, Human_Player, AI_Player, Negamax
 from easyAI import id_solve, TT
 import numpy as np
 from easyAI import SSS
-from numba import jit
-from score import score
-
+from score import computescore,type_table,score_table
 
 FREE = 0
-
-
 
 class GomokuGame(TwoPlayersGame):
     """ Gomoku game for minimax """
@@ -26,10 +22,15 @@ class GomokuGame(TwoPlayersGame):
         self.board = np.zeros((width, width), np.int8)
         # self.board[width/2][width/2] = 2
         self.hboard = tuple(map(tuple, self.board))
-        self.nplayer = 2  # player 1 starts
+        self.nplayer = 1  # player 1 starts
+        self.movecount = 1  # player 1 starts
+        self.score = 0  
+        self.oldPatt = []
+        self.DBG = False
 
     def htob(self):
         self.board = np.asarray(self.hboard)
+        self.score = self.scorefromscratch()
 
     def spot_string(self, i, j):
         return ["_", "O", "X"][self.board[j][i]]
@@ -48,14 +49,35 @@ class GomokuGame(TwoPlayersGame):
             ret.append([self.width/2,self.width/2])
         return ret
 
+    def scoring(self):
+        sc = self.score
+        ss = self.scorefromscratch()
+        if sc != -ss:
+            import pdb; pdb.set_trace()  # breakpoint 69cb5e3d //       board = self.board
+
+        return -self.score
 
     def make_move(self, move):
+        nplayer = self.nplayer
+        oldscore = self.score
+        self.df = False
+        self.movecount += 1
+        self.last = self.nplayer
+        scorediff = computescore(self.board,self.width,self.nplayer,move[0],(move[1]))
         self.board[move[0], move[1]] = self.nplayer
+        self.df = True
+        scorediff2 = computescore(self.board,self.width,self.nplayer,int(move[0]),int(move[1]))
         self.hboard = tuple(map(tuple, self.board))
+        board = self.board
+        diff = scorediff2 - scorediff
+        if self.nplayer == 1:
+            self.score = -1 * self.score
+            self.score += diff ## musi byt plus
+        else:
+            self.score = -1 * self.score
+            self.score -= diff ## musi byt minus
 
-    def unmake_move(self, move):
-        self.board[move[0], move[1]] = 0
-        self.hboard = tuple(map(tuple, self.board))
+
 
     def win(self):
         return self.checkwin(self.nplayer)
@@ -69,9 +91,6 @@ class GomokuGame(TwoPlayersGame):
         if self.checkwin(1):
             return "Vyhravas ty"
         return "buhvi"
-
-    def ttentry(self):
-        return self.hboard;
 
 
     def checkwin(self, pl):
@@ -110,9 +129,49 @@ class GomokuGame(TwoPlayersGame):
         return True
 
 
-    def ttentry(self):
-        return "".join([".0X"[i] for i in self.board.flatten()])
+    # def ttentry(self):
+        # return "".join([".0X"[i] for i in self.board.flatten()])
 
-    def scoring(self):
-        return score(self.board,self.width,self.nplayer)
 
+
+    def scorefromscratch(self):
+
+        pat_l = []
+        boardrot = np.rot90(self.board)
+        psize = 5
+        ret = 0
+
+        for x in xrange(0, self.width):
+            for y in xrange(0, self.width - psize + 1):
+                a = tuple(self.board[x:x + 1, y:y + psize].flatten())
+                b = tuple(self.board[y:y + psize, x:x + 1].flatten())
+
+                if a in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
+                    pat_l.append(type_table[a]) 
+                    ret += score_table[type_table[a]]
+                if b in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
+                    pat_l.append(type_table[b]) 
+                    ret += score_table[type_table[b]]
+
+        for x in xrange(-self.width, self.width):
+            for y in xrange(0, self.width - psize + 1):
+                a = tuple(self.board.diagonal(x)[y:y+psize])
+                b = tuple(boardrot.diagonal(x)[y:y+psize])
+                if a in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
+                    ret += score_table[type_table[a]]
+                    pat_l.append(type_table[a]) 
+                if b in type_table:
+                    if self.DBG:
+                        import pdb; pdb.set_trace()  # breakpoint 6774a74d //
+                    ret += score_table[type_table[b]]
+                    pat_l.append(type_table[b]) 
+        if self.nplayer == 1:
+            return ret
+        else:
+            return -ret

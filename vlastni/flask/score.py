@@ -11,6 +11,7 @@ import numpy as np
 from easyAI import SSS
 from numba import jit
 import pdb 
+import cProfile 
 type_table = {
                 (1,1,1,1,1): 'l_5',
 
@@ -24,20 +25,20 @@ type_table = {
                 (0,1,0,1,1): 'l_3',
                 (0,1,1,0,1): 'l_3',
                 (0,1,1,1,0): 'l_3c',
-                (1,0,0,1,1): 'l_3',
+                # (1,0,0,1,1): 'l_3',
                 (1,0,1,0,1): 'l_3',
                 (1,0,1,1,0): 'l_3',
-                (1,1,0,0,1): 'l_3',
+                # (1,1,0,0,1): 'l_3',
                 (1,1,0,1,0): 'l_3',
                 (1,1,1,0,0): 'l_3c',
 
                 (1,1,0,0,0): 'l_2c',
                 (1,0,1,0,0): 'l_2',
-                (1,0,0,1,0): 'l_2',
-                (1,0,0,0,1): 'l_2',
+                # (1,0,0,1,0): 'l_2',
+                # (1,0,0,0,1): 'l_2',
                 (0,1,1,0,0): 'l_2c',
                 (0,1,0,1,0): 'l_2',
-                (0,1,0,0,1): 'l_2',
+                # (0,1,0,0,1): 'l_2',
                 (0,0,1,1,0): 'l_2c',
                 (0,0,1,0,1): 'l_2',
                 (0,0,0,1,1): 'l_2c',
@@ -55,45 +56,57 @@ type_table = {
                 (0,2,0,2,2): 'b_3',
                 (0,2,2,0,2): 'b_3',
                 (0,2,2,2,0): 'b_3c',
-                (2,0,0,2,2): 'b_3',
+                # (2,0,0,2,2): 'b_3',
                 (2,0,2,0,2): 'b_3',
                 (2,0,2,2,0): 'b_3',
-                (2,2,0,0,2): 'b_3',
+                # (2,2,0,0,2): 'b_3',
                 (2,2,0,2,0): 'b_3',
                 (2,2,2,0,0): 'b_3c',
 
                 (2,2,0,0,0): 'b_2c',
                 (2,0,2,0,0): 'b_2',
-                (2,0,0,2,0): 'b_2',
-                (2,0,0,0,2): 'b_2',
+                # (2,0,0,2,0): 'b_2',
+                # (2,0,0,0,2): 'b_2',
                 (0,2,2,0,0): 'b_2c',
                 (0,2,0,2,0): 'b_2',
-                (0,2,0,0,2): 'b_2',
+                # (0,2,0,0,2): 'b_2',
                 (0,0,2,2,0): 'b_2c',
                 (0,0,2,0,2): 'b_2',
                 (0,0,0,2,2): 'b_2c'
              }
 
 score_table = {
-                'b_5':-1000000,
-                'b_4c':-100000,
-                'b_4':  -10000,
-                'b_3c':  -1000,
+                'b_5':-100000000,
+                'b_4c': -500,
+                'b_4':  -500,
+                'b_3c':   -100,
                 'b_3':    -100,
                 'b_2c':    -10,
                 'b_2':      -1,
 
-                'l_5': 1000000,
-                'l_4c': 100000,
-                'l_4':   10000,
-                'l_3c':   1000,
-                'l_3':     100,
-                'l_2c':     10,
-                'l_2':       1,
+                'l_5': 400000000,
+                'l_4c': 2000,
+                'l_4':   2000,
+                'l_3c':    400,
+                'l_3':     400,
+                'l_2c':     40,
+                'l_2':       4,
 
                 'z':         0
              }
-@jit
+
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
+
 def score(board,witdh,nplayer):
 
     pat_l = []
@@ -107,10 +120,10 @@ def score(board,witdh,nplayer):
             b = tuple(board[y:y + psize, x:x + 1].flatten())
 
             if a in type_table:
-                pat_l.append(type_table[a]) 
+                # pat_l.append(type_table[a]) 
                 ret += score_table[type_table[a]]
             if b in type_table:
-                pat_l.append(type_table[b]) 
+                # pat_l.append(type_table[b]) 
                 ret += score_table[type_table[b]]
 
     for x in xrange(-witdh, witdh):
@@ -119,17 +132,16 @@ def score(board,witdh,nplayer):
             b = tuple(boardrot.diagonal(x)[y:y+psize])
             if a in type_table:
                 ret += score_table[type_table[a]]
-                pat_l.append(type_table[a]) 
+                # pat_l.append(type_table[a]) 
             if b in type_table:
                 ret += score_table[type_table[b]]
-                pat_l.append(type_table[b]) 
+                # pat_l.append(type_table[b]) 
     if nplayer == 1:
         return ret
     else:
         return -ret
-@jit
-def computescore(board,width,nplayer,xmov,ymov): # spocitam hvezdici patternu 10*10 s novym uprostred a bez nej
-# a pak odectu starou a prictu novou
+
+def computescore(board,width,nplayer,xmov,ymov): # pro dane souradnice xmov,ymov spocitam skore sloupce,radku a diagonal
     board = board
     newPatt = []
     boardrot = np.rot90(board)
@@ -141,8 +153,6 @@ def computescore(board,width,nplayer,xmov,ymov): # spocitam hvezdici patternu 10
     d = tuple(boardrot.diagonal(-width+1+ymov+xmov))
     a = tuple(board[xmov:xmov + 1].flatten())
     b = tuple(boardrot[-ymov-1].flatten())
-    # if (board == x).all():
-    #    pdb.set_trace()  # breakpoint 7a891b19 //
  
     for x in xrange(0,len(a)-psize+1):
         aa = tuple(a[x:x+psize])
